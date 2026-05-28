@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineTrack Pro</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4"></script>
+    <!-- Google Fonts for that premium feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Favicon (place your logo at assets/logo.png) -->
+    <link rel="icon" href="assets/logo.png" sizes="48x48">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a; /* Deep Midnight Blue */
+            --card-bg: #1e293b;
+            --accent: #38bdf8;   /* Electric Blue */
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --danger: #f43f5e;
+            --star-gold: #fbbf24;
+            --glass: rgba(15, 23, 42, 0.8);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* --- Navigation --- */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.2rem;
+            gap: 1rem;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-left, .nav-center, .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .nav-center {
+            justify-content: center;
+            flex: 1 1 auto;
+        }
+
+        .nav-right {
+            margin-left: auto;
+        }
+
+        .navbar a, .navbar router-link {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            transition: 0.3s;
+        }
+
+        .navbar a:hover, .navbar a.router-link-active, .navbar .router-link-active {
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .nav-link-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.4rem;
+            padding: 0.1rem 0.4rem;
+            margin-left: 0.4rem;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .logo {
+            height: 48px;
+            width: auto;
+            display: block;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .auth-btn {
+            padding: 0.45rem 0.9rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: transparent;
+            color: var(--text-main);
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        .auth-btn.login {
+            background: rgba(255,255,255,0.04);
+            color: var(--text-main);
+        }
+
+        .auth-btn.signup {
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px -6px rgba(0,0,0,0.6);
+        }
+
+        .user-chip {
+            padding: 0.45rem 0.85rem;
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .profile-link {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.72);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            z-index: 2000;
+        }
+
+        .auth-modal {
+            width: min(100%, 460px);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.92));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+        }
+
+        .auth-modal h2 {
+            margin: 0 0 1rem;
+            font-size: 1.6rem;
+            color: var(--text-main);
+        }
+
+        .auth-modal form {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .auth-modal label {
+            display: grid;
+            gap: 0.4rem;
+            color: var(--text-dim);
+            font-size: 0.92rem;
+        }
+
+        .auth-modal input {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 12px;
+        }
+
+        .auth-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 0.4rem;
+        }
+
+        .auth-actions .secondary-btn {
+            width: auto;
+        }
+
+        .auth-error {
+            color: #fda4af;
+            font-size: 0.95rem;
+            min-height: 1.2rem;
+        }
+
+        @media (max-width: 720px) {
+            .nav-center { display: none; }
+            .nav-right { margin-left: 0; }
+            .auth-btn { padding: 0.4rem 0.7rem; }
+        }
+
+        /* --- Layout --- */
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            letter-spacing: -1px;
+            background: linear-gradient(to bottom right, #fff, #64748b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- Search Area --- */
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 4rem;
+            max-width: 600px;
+        }
+
+        input {
+            flex: 1;
+            padding: 1.2rem 1.5rem;
+            border-radius: 16px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: white;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+        }
+
+        button {
+            padding: 0 2rem;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            background: var(--accent);
+            color: #0f172a;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3);
+        }
+
+        /* --- Movie Cards --- */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .movie-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .movie-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .movie-card strong {
+            font-size: 1.4rem;
+            display: block;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .movie-year {
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        .actions {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .actions button {
+            width: 100%;
+            padding: 0.8rem;
+        }
+
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+            margin-top: 1rem;
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.3);
+        }
+
+        /* --- Ratings & Notes --- */
+        .rating-section {
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .stars {
+            font-size: 1.8rem;
+            letter-spacing: 5px;
+        }
+
+        .active-star {
+            color: var(--star-gold);
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+        }
+
+        .notes-box textarea {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: var(--text-dim);
+            padding: 1rem;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .profile-panel {
+            display: grid;
+            gap: 1rem;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .profile-card {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+        }
+
+        .profile-card h2 {
+            margin-top: 0;
+        }
+
+        .profile-meta {
+            display: grid;
+            gap: 0.65rem;
+            color: var(--text-dim);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            width: fit-content;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--text-main);
+            border: 1px solid rgba(56, 189, 248, 0.14);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <nav class="navbar">
+            <div class="nav-center">
+                <router-link to="/" class="nav-link">SEARCH</router-link>
+                <router-link to="/watchlist" class="nav-link">
+                    WATCHLIST
+                    <span v-if="currentUser" class="nav-link-badge">{{ listStats.watchlist }}</span>
+                </router-link>
+                <router-link to="/library" class="nav-link">
+                    LIBRARY
+                    <span v-if="currentUser" class="nav-link-badge">{{ listStats.library }}</span>
+                </router-link>
+            </div>
+
+            <div class="nav-right">
+                <span v-if="currentUser" class="user-chip">{{ currentUser.username }}</span>
+                <router-link v-if="currentUser" to="/profile" class="auth-btn login profile-link">Profile</router-link>
+                <button v-if="!currentUser" class="auth-btn login" @click="openAuth('login')">Log in</button>
+                <button v-if="!currentUser" class="auth-btn signup" @click="openAuth('signup')">Sign up</button>
+                <button v-else class="auth-btn login" @click="logout">Log out</button>
+            </div>
+        </nav>
+
+        <router-view></router-view>
+
+        <div v-if="showAuthModal" class="modal-backdrop" @click.self="closeAuth">
+            <div class="auth-modal">
+                <h2>{{ authMode === 'login' ? 'Log in' : 'Create account' }}</h2>
+                <form @submit.prevent="submitAuth">
+                    <label v-if="authMode === 'login'">
+                        Username or email
+                        <input v-model="authForm.identifier" type="text" autocomplete="username" placeholder="Enter your username or email">
+                    </label>
+
+                    <template v-else>
+                        <label>
+                            Username
+                            <input v-model="authForm.username" type="text" autocomplete="username" placeholder="Choose a username">
+                        </label>
+
+                        <label>
+                            Email
+                            <input v-model="authForm.email" type="email" autocomplete="email" placeholder="name@example.com">
+                        </label>
+                    </template>
+
+                    <label>
+                        Password
+                        <input v-model="authForm.password" type="password" autocomplete="current-password" placeholder="Enter your password">
+                    </label>
+
+                    <label v-if="authMode === 'signup'">
+                        Confirm password
+                        <input v-model="authForm.confirmPassword" type="password" autocomplete="new-password" placeholder="Repeat your password">
+                    </label>
+
+                    <div class="auth-error">{{ authError }}</div>
+
+                    <div class="auth-actions">
+                        <button type="button" class="secondary-btn" @click="closeAuth">Cancel</button>
+                        <button type="submit">{{ authMode === 'login' ? 'Log in' : 'Sign up' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH PAGE TEMPLATE -->
+    <script type="text/x-template" id="search-template">
+    <div class="page">
+        <h1>Find your next <br><span style="color:var(--accent)">obsession.</span></h1>
+        <div class="search-bar">
+            <input v-model="query" @keyup.enter="search" placeholder="Enter movie title...">
+            <button @click="search">Search</button>
+        </div>
+        <div class="results-grid">
+            <div v-for="movie in results" :key="movie.imdbID" class="movie-card">
+                <div>
+                    <strong>{{ movie.Title }}</strong> 
+                    <span class="movie-year">{{ movie.Year }}</span>
+                </div>
+                <div class="actions">
+                    <button @click="add(movie, 'Watchlist')">Add to Watchlist</button>
+                    <button class="secondary-btn" @click="add(movie, 'Library')">I've Seen This</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </script>
+
+    <!-- LIST PAGE TEMPLATE (Watchlist/Library) -->
+    <script type="text/x-template" id="list-template">
+    <div class="page">
+        <h1>{{ title }}</h1>
+        <div v-if="movies.length === 0" style="color: var(--text-dim); font-size: 1.2rem;">
+            Your collection looks a bit lonely...
+        </div>
+        
+        <div class="results-grid">
+            <div v-for="movie in movies" :key="movie.id" class="movie-card">
+                <div>
+                    <strong>{{ movie.title }}</strong>
+                    <p class="movie-year">{{ movie.year }}</p>
+
+                    <!-- Library Specific Features -->
+                    <div v-if="type === 'library'">
+                        <div class="rating-section">
+                            <div class="stars">
+                                <span v-for="n in 5" :key="n" @click="setRating(movie.id, n)"
+                                    :class="{ 'active-star': n <= movie.rating }" style="cursor: pointer;">
+                                    {{ n <= movie.rating ? '★' : '☆' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="notes-box">
+                            <textarea v-model="movie.note" placeholder="Write a quick review..." @blur="saveNote(movie)"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button v-if="type === 'watchlist'" @click="moveMovie(movie.id)">
+                        ✅ Mark as Watched
+                    </button>
+                    <button @click="deleteMovie(movie.id)" class="btn-delete">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </script>
+
+    <!-- PROFILE PAGE TEMPLATE -->
+    <script type="text/x-template" id="profile-template">
+    <div class="page profile-panel">
+        <h1>Profile</h1>
+        <div class="profile-card" v-if="currentUser">
+            <div class="status-pill">Session active</div>
+            <h2>{{ currentUser.username }}</h2>
+            <div class="profile-meta">
+                <div><strong>Email:</strong> {{ currentUser.email }}</div>
+                <div><strong>User ID:</strong> {{ currentUser.id }}</div>
+                <div>Movies, watchlist, and library data are tied to this account.</div>
+            </div>
+            <div class="profile-actions">
+                <button @click="logout">Log out</button>
+            </div>
+        </div>
+    </div>
+    </script>
+
+    <script src="app.js"></script>
+</body>
+</html>
