@@ -255,7 +255,46 @@ source .venv/bin/activate
 
 Open the app at `http://127.0.0.1:5000/` so authentication cookies and session state work correctly.
 
-## 11. Validation
+## 11. Deploy with Nginx (Docker Compose)
+
+This repository now includes production deployment files:
+
+- `Dockerfile` (Flask app with Gunicorn)
+- `nginx.conf` (reverse proxy)
+- `docker-compose.yml` (Nginx + Flask app + MongoDB)
+
+### Start deployment
+
+```bash
+docker compose up --build -d
+```
+
+Open:
+
+- `http://localhost:8080/` (served through Nginx)
+
+### Stop deployment
+
+```bash
+docker compose down
+```
+
+### Configure secrets/environment
+
+Set strong values for:
+
+- `SECRET_KEY`
+- `API_KEY` (OMDb)
+
+You can export them before starting Compose:
+
+```bash
+export SECRET_KEY='replace-with-a-strong-secret'
+export API_KEY='your-omdb-key'
+docker compose up --build -d
+```
+
+## 12. Validation
 
 ### Auth smoke test
 
@@ -269,13 +308,13 @@ Open the app at `http://127.0.0.1:5000/` so authentication cookies and session s
 ./.venv/bin/python -m py_compile main.py movieService.py reviewService.py models.py movieEvents.py authService.py analyticsService.py
 ```
 
-## 12. Requirements
+## 13. Requirements
 
-The current Python dependencies already cover the app.
+The current Python dependencies already cover the app, including `gunicorn` for production serving.
 
 No `requirements.txt` update is needed unless you add a new package.
 
-## 13. Notes
+## 14. Notes
 
 - Passwords are stored as hashes, never plain text.
 - Movie rows are scoped to the signed-in user.

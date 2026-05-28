@@ -26,7 +26,7 @@ def create_app():
 
 
     # MongoDB configuration
-    app.config["MONGO_URI"] = "mongodb://localhost:27017/movieDB"
+    app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://localhost:27017/movieDB")
     mongo.init_app(app)
 
 
@@ -55,7 +55,10 @@ def create_app():
     return app
 
 
-# Run the app    
+# Expose app for production WSGI servers (for example, Gunicorn)
+app = create_app()
+
+
+# Run the app
 if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=os.getenv("FLASK_DEBUG", "0") == "1")
