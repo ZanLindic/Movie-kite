@@ -15,17 +15,30 @@ movieService_bp = Blueprint("movieService", __name__)
 ### Proxy Route to GET Movie Data from OMDb API ###
 @movieService_bp.route("/search", methods=["GET"])
 def proxy_search():
-    query = request.args.get('q')
+    query = request.args.get('q', '').strip()
     if not query:
         return jsonify({"error": "No query provided"}), 400
     
     # Talk to OMDb API
-    api_key = os.getenv("API_KEY") 
-    response = requests.get(f"https://www.omdbapi.com/?s={query}&apikey={api_key}")
+    api_key = os.getenv("API_KEY")
+    if not api_key:
+        return jsonify({"error": "OMDb API key is not configured."}), 503
+
+    try:
+        response = requests.get(
+            "https://www.omdbapi.com/",
+            params={"s": query, "apikey": api_key},
+            timeout=10,
+        )
+    except requests.RequestException:
+        return jsonify({"error": "Failed to reach OMDb API"}), 502
 
     # Return in Json format to frontend
     if response.status_code == 200:
-        return jsonify(response.json())
+        payload = response.json()
+        if payload.get("Response") == "False":
+            payload["Search"] = []
+        return jsonify(payload)
     else:
         return jsonify({"error": "Failed to fetch data from OMDb API"}), response.status_code
     

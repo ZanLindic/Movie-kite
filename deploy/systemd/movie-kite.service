@@ -1,0 +1,15 @@
+[Unit]
+Description=Movie Kite Flask app via Gunicorn
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/uporabnik/WORKSPACE/movie-kite
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=/home/uporabnik/WORKSPACE/movie-kite/.env
+ExecStart=/home/uporabnik/WORKSPACE/movie-kite/.venv/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 wsgi:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

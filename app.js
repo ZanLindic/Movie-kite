@@ -45,13 +45,35 @@ async function fetchUserListStats() {
 const SearchPage = {
     template: '#search-template',
     data() {
-        return { query: '', results: [] }
+        return { query: '', results: [], searchMessage: '' }
     },
     methods: {
         async search() {
-            const res = await fetch(`/movies/search?q=${encodeURIComponent(this.query)}`);
-            const data = await res.json();
-            this.results = data.Search || [];
+            try {
+                const query = this.query.trim();
+                this.results = [];
+                this.searchMessage = '';
+
+                if (!query) {
+                    this.searchMessage = 'Enter a movie title to search.';
+                    return;
+                }
+
+                const res = await fetch(`/movies/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    this.searchMessage = data.error || data.Error || 'Search failed.';
+                    return;
+                }
+
+                this.results = Array.isArray(data.Search) ? data.Search : [];
+                this.searchMessage = data.Error || (this.results.length === 0 ? 'No movies found.' : '');
+            }
+            catch (error) {
+                this.searchMessage = error?.message || 'Search failed.';
+                this.results = [];
+            }
         },
         async add(movie, status) {
             if (!this.$root.currentUser) {

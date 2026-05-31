@@ -491,7 +491,10 @@
         <h1>Find your next <br><span style="color:var(--accent)">obsession.</span></h1>
         <div class="search-bar">
             <input v-model="query" @keyup.enter="search" placeholder="Enter movie title...">
-            <button @click="search">Search</button>
+            <button type="button" @click="search">Search</button>
+        </div>
+        <div v-if="searchMessage" style="color: var(--text-dim); margin-bottom: 1rem;">
+            {{ searchMessage }}
         </div>
         <div class="results-grid">
             <div v-for="movie in results" :key="movie.imdbID" class="movie-card">
@@ -570,6 +573,6 @@
     </div>
     </script>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=20260529"></script>
 </body>
 </html>

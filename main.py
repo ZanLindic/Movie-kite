@@ -7,6 +7,7 @@ from reviewService import review_bp
 from authService import auth_bp
 from analyticsService import analytics_bp
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
 # # Load environment variables from .env file
@@ -18,6 +19,9 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-change-me')
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', 'false').lower() == 'true'
+    app.config['PREFERRED_URL_SCHEME'] = 'https' if app.config['SESSION_COOKIE_SECURE'] else 'http'
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 
     # SQL Database configuration
@@ -26,7 +30,7 @@ def create_app():
 
 
     # MongoDB configuration
-    app.config["MONGO_URI"] = "mongodb://localhost:27017/movieDB"
+    app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://localhost:27017/movieDB")
     mongo.init_app(app)
 
 
