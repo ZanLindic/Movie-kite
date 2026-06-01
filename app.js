@@ -1,5 +1,22 @@
+const API_BASE = (() => {
+    const explicitBase = window.__MOVIEKITE_API_BASE__ || '';
+    if (explicitBase) {
+        return explicitBase.replace(/\/$/, '');
+    }
+
+    if (window.location.protocol === 'file:' || window.location.port !== '5000') {
+        return 'http://127.0.0.1:5000';
+    }
+
+    return '';
+})();
+
+function apiUrl(path) {
+    return `${API_BASE}${path}`;
+}
+
 async function sessionFetch(url, options = {}) {
-    const response = await fetch(url, {
+    const response = await fetch(apiUrl(url), {
         credentials: 'include',
         ...options,
         headers: {
@@ -17,7 +34,7 @@ async function sessionFetch(url, options = {}) {
 }
 
 async function fetchCurrentUser() {
-    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    const res = await fetch(apiUrl('/api/auth/me'), { credentials: 'include' });
     const data = await res.json();
     return data.user || null;
 }
@@ -59,7 +76,7 @@ const SearchPage = {
                     return;
                 }
 
-                const res = await fetch(`/movies/search?q=${encodeURIComponent(query)}`);
+                const res = await fetch(apiUrl(`/movies/search?q=${encodeURIComponent(query)}`));
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
@@ -83,7 +100,12 @@ const SearchPage = {
 
             const res = await sessionFetch('/movies/add', {
                 method: 'POST',
-                body: JSON.stringify({ title: movie.Title, year: movie.Year, status })
+                body: JSON.stringify({
+                    title: movie.Title,
+                    year: movie.Year,
+                    status,
+                    poster_url: movie.Poster
+                })
             });
             const data = await res.json();
             if (res.ok) {
@@ -123,18 +145,26 @@ const ListPage = {
         title() { return this.type === 'watchlist' ? 'My Watchlist' : 'My Library'; }
     },
     methods: {
+        normalizePosterUrl(url) {
+            if (!url) return '';
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                return `/movies/poster?url=${encodeURIComponent(url)}`;
+            }
+            return url;
+        },
+
         // metoda za nalaganje filmov v frontend iz database-a glede na status (watchlist ali library)
         async loadMovies() {
             try {
-                console.log("Fetching movies for:", this.type);
                 const res = await sessionFetch('/movies/');
                 const allMovies = await res.json();
-                this.movies = allMovies.filter(m => m.status === this.type);
+                this.movies = allMovies
+                    .filter(m => m.status === this.type)
+                    .map(m => ({ ...m, poster_url: this.normalizePosterUrl(m.poster_url) }));
 
-                // če smo v library, naloži tudi review za vsak film
-                if(this.type == 'library') {
+                if (this.type === 'library') {
                     this.movies.forEach(movie => {
-                        this.loadNotes(movie); // Load notes for each movie in library
+                        this.loadNotes(movie);
                     });
                 }
             }
@@ -151,7 +181,9 @@ const ListPage = {
                     method: 'PUT',
                     body: JSON.stringify({ status: 'library' })
                 });
-                if (res.ok) await this.loadMovies();
+                if (res.ok) {
+                    await this.loadMovies();
+                }
             }
             catch (e) {
                 alert("Error moving movie: " + e.message);
@@ -164,7 +196,9 @@ const ListPage = {
 
             try {
                 const res = await sessionFetch(`/movies/${movie_id}`, { method: 'DELETE' });
-                if (res.ok) await this.loadMovies();
+                if (res.ok) {
+                    await this.loadMovies();
+                }
             }
             catch (e) {
                 alert("Error deleting movie: " + e.message);
@@ -317,7 +351,7 @@ const app = Vue.createApp({
                         password: this.authForm.password
                     };
 
-                const res = await fetch(endpoint, {
+                const res = await fetch(apiUrl(endpoint), {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
@@ -341,7 +375,7 @@ const app = Vue.createApp({
             }
         },
         async logout() {
-            await fetch('/api/auth/logout', {
+            await fetch(apiUrl('/api/auth/logout'), {
                 method: 'POST',
                 credentials: 'include'
             });

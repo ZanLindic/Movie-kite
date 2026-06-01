@@ -16,6 +16,8 @@ This service handles the structured movie data stored by SQLAlchemy through the 
 - update a movie's status
 - update a movie's rating
 - delete a movie from the library
+- proxy stored poster URLs back to the frontend
+- upload poster images to object storage when a movie is saved
 
 ## Search Flow
 
@@ -54,6 +56,8 @@ The route also accepts `OPTIONS` so browser CORS preflight requests can complete
 
 `GET /movies/` returns all saved movies as JSON.
 
+`GET /movies/poster?url=<poster_url>` returns poster bytes for frontend rendering.
+
 `PUT /movies/<movie_id>/status` updates the stored status for one movie.
 
 `PATCH /movies/<movie_id>/rating` updates the stored rating for one movie.
@@ -74,6 +78,8 @@ Important fields:
 - `year`: stored as a string
 - `poster_url`: optional poster link
 - `rating`: integer rating with a default of `0`
+
+When a poster URL is provided during `POST /movies/add`, the backend tries to store the image in object storage and saves the resulting URL in `poster_url`.
 
 ## Service Notes
 

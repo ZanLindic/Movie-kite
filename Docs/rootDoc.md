@@ -32,6 +32,7 @@ The app uses two storage systems for two different kinds of data:
 
 - SQLite stores the core movie list, including title, year, status, poster URL, and rating.
 - MongoDB stores free-form review notes for each movie.
+- Poster images are fetched from OMDb or a saved URL, stored through `posterStorageService.py` when needed, and served back through the `/movies/poster` proxy route.
 
 That split keeps structured movie data in SQL while letting notes stay flexible in MongoDB.
 
