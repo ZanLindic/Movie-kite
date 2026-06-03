@@ -10,15 +10,30 @@ from dotenv import load_dotenv
 from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
-# # Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file or a sanitized runtime env path
+load_dotenv(os.getenv('DOTENV_FILE', '.env'))
 
 # Create Flash app
 def create_app():
     app = Flask(__name__, static_folder=".", static_url_path="")
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-change-me')
     app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    # Allow SameSite to be configured from environment for cross-site scenarios.
+    # Supported values (case-insensitive): 'Lax', 'Strict', 'None'. Default is 'Lax'.
+    samesite_env = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
+    if samesite_env is None:
+        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    else:
+        s = samesite_env.strip().lower()
+        if s == 'none':
+            # Flask expects the string 'None' to emit SameSite=None
+            app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+        elif s in ('lax', 'strict'):
+            app.config['SESSION_COOKIE_SAMESITE'] = s.capitalize()
+        else:
+            # Fallback: pass through whatever the user provided
+            app.config['SESSION_COOKIE_SAMESITE'] = samesite_env
+
     app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', 'false').lower() == 'true'
     app.config['PREFERRED_URL_SCHEME'] = 'https' if app.config['SESSION_COOKIE_SECURE'] else 'http'
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)

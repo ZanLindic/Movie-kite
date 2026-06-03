@@ -1,0 +1,94 @@
+{
+  "title": "Movie Kite Overview",
+  "tags": ["movie-kite", "analytics"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "table",
+      "title": "Movies in Library by Title",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "moviekite-sqlite" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT title, COUNT(*) AS users_in_library FROM movie WHERE library = 1 GROUP BY title ORDER BY users_in_library DESC, title ASC;"
+        }
+      ],
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Movies in Watchlist by Title",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "moviekite-sqlite" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT title, COUNT(*) AS users_in_watchlist FROM movie WHERE watch_list = 1 GROUP BY title ORDER BY users_in_watchlist DESC, title ASC;"
+        }
+      ],
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 0 },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Total Movies Per Status",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "moviekite-sqlite" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT 'library' AS list_type, COUNT(*) AS total_rows FROM movie WHERE library = 1 UNION ALL SELECT 'watchlist' AS list_type, COUNT(*) AS total_rows FROM movie WHERE watch_list = 1;"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Top Users by Library Size",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "moviekite-sqlite" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT u.username, COUNT(*) AS library_count FROM user u JOIN movie m ON m.user_id = u.id WHERE m.library = 1 GROUP BY u.id, u.username ORDER BY library_count DESC LIMIT 10;"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Movie Actions Over Time",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "moviekite-sqlite" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT date(created_at) AS day, event_type, COUNT(*) AS event_count FROM movie_event GROUP BY date(created_at), event_type ORDER BY day ASC, event_type ASC;"
+        }
+      ],
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 18 },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Recent User Interactions",
+      "datasource": { "type": "frser-sqlite-datasource", "uid": "moviekite-sqlite" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT created_at, username, movie_title, event_type, details FROM movie_event e JOIN user u ON u.id = e.user_id ORDER BY created_at DESC LIMIT 100;"
+        }
+      ],
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 18 },
+      "options": { "showHeader": true }
+    }
+  ]
+}

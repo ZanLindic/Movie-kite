@@ -1,0 +1,14 @@
+apiVersion: 1
+
+datasources:
+- name: Movie Kite SQLite
+  uid: moviekite-sqlite
+  type: frser-sqlite-datasource
+  access: proxy
+  isDefault: true
+  editable: false
+  jsonData:
+    pathPrefix: "file:"
+    path: /var/lib/grafana/db/movies.db
+    pathOptions: mode=ro
+    attachLimit: 0

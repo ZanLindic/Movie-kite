@@ -1,0 +1,21 @@
+services:
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: movie-kite-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: change-me-now
+      GF_INSTALL_PLUGINS: frser-sqlite-datasource
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./movies.db:/var/lib/grafana/db/movies.db:ro
+    restart: unless-stopped
+
+volumes:
+  grafana-data:

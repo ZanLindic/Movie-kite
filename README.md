@@ -291,6 +291,66 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
+## 11. Grafana in Docker
+
+If you want Grafana to read the app's existing SQLite database directly, use the included Docker Compose setup.
+
+### What it does
+
+- starts Grafana in a container,
+- installs the `frser-sqlite-datasource` plugin,
+- mounts the local `movies.db` file read-only,
+- provisions a datasource named `Movie Kite SQLite`,
+- provisions a dashboard with the queries from `Docs/grafanaQueriesDoc.md`.
+
+### Start it
+
+```bash
+docker compose -f docker-compose.grafana.yml up -d
+```
+
+Open Grafana at `http://127.0.0.1:3000`.
+
+Default login:
+
+- username: `admin`
+- password: `change-me-now`
+
+### Change the setup
+
+- Edit `docker-compose.grafana.yml` to change the admin password or port.
+- Edit `grafana/provisioning/datasources/datasource.yml` if the SQLite file path changes.
+- Edit `grafana/dashboards/movie-kite-dashboard.json` if you want different panels or queries.
+
+### Important note
+
+The Grafana container reads the same `movies.db` file used by the app. Make sure the Flask app has already created that file once, or start the app first and then run Grafana.
+
+## 12. One-file deployment
+
+If you want one entry point for everything, use the top-level `deploy.sh` script.
+
+```bash
+chmod +x deploy.sh
+sudo ./deploy.sh up
+```
+
+What it does:
+
+- installs Gunicorn into the existing virtualenv,
+- creates or updates the systemd service for the Flask app,
+- installs and reloads the Nginx site,
+- generates the Grafana Docker Compose file plus provisioning files,
+- starts Grafana with the SQLite datasource and dashboard.
+
+Useful follow-up commands:
+
+```bash
+sudo ./deploy.sh status
+sudo ./deploy.sh logs
+sudo ./deploy.sh down
+```
+
 ### 5. Add HTTPS if needed
 
 After the site is reachable on port 80, add a certificate with Certbot.

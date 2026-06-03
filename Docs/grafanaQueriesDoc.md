@@ -1,3 +1,5 @@
+
+
 # Grafana SQL Queries for Movie-kite
 
 These queries are written for the current SQL schema in `models.py`:
